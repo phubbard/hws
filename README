@@ -1,25 +1,13 @@
-Paul Hubbard pfhubbard@ucsd.edu
-June 21 2010
-
-UPDATE March 15 2011 - updated for the JSON interface in buildbot 0.8.3. Working well.
-
-Picture: 
- http://github.com/phubbard/arduino-buildbot/raw/master/a-b.jpg
+Paul Hubbard pfh@phfactor.net
+Nov 24 2011
 
 This project is an evolution of the 'office-weather' project:
 
-http://github.com/phubbard/office-weather
+http://github.com/phubbard/arduino-buildbot
 
-This version is a complete re-write
-* Switch from USB communications to TCP over ethernet, by using the 
-  Arduino ethernet shield: http://www.sparkfun.com/commerce/product_info.php?products_id=9026
-* Add a 3-color LED as status indicator: http://www.sparkfun.com/commerce/product_info.php?products_id=8579
-* Python code is much more complex - more below
-
-Goals:
-* Use Arduino to monitor our Buildbot and the latest build. If it breaks, red light, if all tests are passing, green light, maybe other colors if useful.
-* Include the previous weather station functionality
-* Be a fun hack
+This version is a simplification - removing the buildbot hooks,
+and planning on adding an external sensor node via Xbee. For now,
+mostly just simplified and cleaned up the buildbot code.
 
 Hardware requirements:
 * Arduino
@@ -40,9 +28,8 @@ Software requirements:
 * Arduino plus BlinkM libaries
 
 Current status and functionality:
-* The python code polls the buildbot, extracts build status and merges the most 
-  recent builds. From this, it chooses an LED color.
-* In parallel, the python code connects to the Arduino, sends the current color 
+* Poll the hardware, push an update to Pachube
+* In parallel, the python code connects to the Arduino, sends the current color
   as a 3-byte RGB string, and then reads two ADC counts that correspond to temp
   and humidity readings. Units and calibration are done in the python code, as
   before.
@@ -50,4 +37,4 @@ Current status and functionality:
 * TAC file from deldotdr for running as a daemon
 
 To-do:
-* Tweak and tune
+* Xbee hardware on order - that'll be fun!

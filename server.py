@@ -17,7 +17,6 @@ from twisted.protocols.basic import LineReceiver
 from twisted.web import client
 from twisted.internet import reactor, protocol, task, threads
 from twisted.python import usage
-import json
 
 # The arduino reads these as bytes and subtracts 'a', so a is zero, etc.
 RED = 'zaa'
@@ -41,8 +40,6 @@ class ALOptions(usage.Options):
         ['port', 'p', 80, 'TCP port to connect to'],
         ['wsport', 'w', 2000, 'TCP port to run webserver on'],
         ['hostname', 'h', '192.168.42.3', 'hostname or IP to connect to'],
-        ['build', 'b', 'ioncore_test', 'Prefix for build(s) to monitor'],
-        ['bboturl', 'u', 'http://buildbot.oceanobservatories.org:8010', 'Buildbot URL'],
         ['interval', 'i', 90, 'Polling interval, seconds'],
     ]
 
@@ -100,7 +97,7 @@ class ArduinoClient(LineReceiver):
         humidity = (rhVolts * 45.25) - 42.76
 
         # Add correction factor
-        humidity = humidity + (rhcf * humidity)
+        humidity += (rhcf * humidity)
 
         lastTemp = temp
         lastRH = humidity
@@ -131,56 +128,6 @@ def set_status(new_color):
     last_time = time()
     current_color = new_color
 
-def decode_buildpage(json_build_page):
-    """
-    Given a page for a specific build, parse to extract build status
-    """
-    logging.debug('starting to decode build page')
-    dp = json.loads(json_build_page)
-    """
-    Should get something like
-    "text": [
-    "build",
-    "successful"
-    ],
-     """
-    if dp['text'][1] == 'successful':
-        logging.info('Build successful, going green')
-        set_status(GREEN)
-    else:
-        logging.info('Build is "%s", going red' % dp['text'][1])
-        set_status(RED)
-
-def decode_page(json_page, bbot_url, main_build):
-    logging.debug('Starting to decode main json page')
-    dp = json.loads(json_page)
-
-    status = dp[main_build]['state']
-    if status != 'idle':
-        logging.debug('Build state is %s, setting blue' % status)
-        # Build in progress
-        set_status(BLUE)
-        return
-
-    last_buildno = max(dp[main_build]['cachedBuilds'])
-    logging.debug('Looking for build #%d' % last_buildno)
-
-    d = client.getPage(bbot_url + '/json/builders/%s/builds/%d' % (main_build, last_buildno))
-    d.addCallback(decode_buildpage)
-
-def poll_bb_json(bbot_url, main_build):
-    """
-    Pull the JSON-encoded build status, used to be XMLRPC but that was removed from 0.8.3
-    See http://buildbot.net/buildbot/docs/latest/Buildbot-Web-Resources.html
-    """
-    global last_time, current_color
-
-    json_url = bbot_url + '/json/builders/'
-
-    logging.debug('about to check %s' % json_url)
-    d = client.getPage(json_url)
-    d.addCallback(decode_page, bbot_url, main_build)
-
 def update_pachube():
     """
     Pachube likes simple updates, since I just have two channels I chose to a CSV encoding. JSON
@@ -193,8 +140,7 @@ def update_pachube():
     api_key = open('api.txt').read()
     data_str = '0,%f\n1,%f\n\n' % (lastTemp, lastRH)
 
-    headers = {'X-PachubeApiKey': api_key}
-    headers['Content-Length'] = str(len(data_str))
+    headers = {'X-PachubeApiKey': api_key, 'Content-Length': str(len(data_str))}
 
     logging.debug('pachube time!')
     d = client.getPage(url, method='PUT', postdata=data_str, headers=headers)
@@ -209,16 +155,10 @@ def ab_main(o):
     logging.basicConfig(level=logging.INFO,
                         format='%(asctime)s %(levelname)s [%(funcName)s] %(message)s')
 
-    bbot_url = o.opts['bboturl']
-    main_build = o.opts['build']
     port = o.opts['port']
     wsport = o.opts['wsport']
     host = o.opts['hostname']
     interval = int(o.opts['interval'])
-
-    #logging.info('Setting up a looping call to the poller, %d seconds' % interval)
-    #pt = task.LoopingCall(poll_bb_json, bbot_url, main_build)
-    #pt.start(interval)
 
     logging.info('Setting up a looping call for the arduino client')
     ct = task.LoopingCall(reactor.connectTCP, host, port, ACFactory())
