@@ -5,6 +5,10 @@ This project is an evolution of the 'office-weather' project:
 
 http://github.com/phubbard/arduino-buildbot
 
+You can see the data at
+
+https://pachube.com/feeds/22374
+
 This version is a simplification - removing the buildbot hooks,
 and planning on adding an external sensor node via Xbee. For now,
 mostly just simplified and cleaned up the buildbot code.
@@ -21,6 +25,9 @@ Hardware requirements:
    About $15, quite cheap for a sensor this nice. You need an external RC
    lowpass, so two more components in the circuit. See the PDF.
 * Optional mini breadboard
+
+Service requirements:
+* Pachube account
 
 Software requirements:
 * Python
