@@ -10,38 +10,45 @@ You can see the data at
 https://pachube.com/feeds/22374
 
 This version is a simplification - removing the buildbot hooks,
-and planning on adding an external sensor node via Xbee. For now,
-mostly just simplified and cleaned up the buildbot code.
+and planning on adding an external sensor node via Xbee. Think 'simple
+indoor-outdoor weather station', only over engineered, less reliable and
+more fun to hack.
 
 Hardware requirements:
 * Arduino
+  http://arduino.cc/ or many other sources
 * Ethernet shield
-* BlinkM RGB LED (URL above)
-* LM35CAZ Nice, TO-92 cased, temperature sensor with 0-5VDC output and no
-   external components required. A few bucks from National.
-   http://www.national.com/mpf/LM/LM35.html#Overview
+  http://www.sparkfun.com/products/9026  
+* Dallas Semiconductor DS18B20 precision digital temperature sensor.
+  http://www.sparkfun.com/products/245 
+* Sparkfun TEMT6000 light sensor eval board
+  http://www.sparkfun.com/products/8688
  * Ohmic Instruments SC-600 humidity sensor and signal conditioning module.
-   http://www.ohmicinstruments.com/pdf/SC-600.pdf
-   About $15, quite cheap for a sensor this nice. You need an external RC
-   lowpass, so two more components in the circuit. See the PDF.
+  http://www.ohmicinstruments.com/pdf/SC-600.pdf
+  About $15, quite cheap for a sensor this nice. You need an external RC
+  lowpass, so two more components in the circuit. See the PDF.
 * Optional mini breadboard
+  http://www.sparkfun.com/products/8800
 
 Service requirements:
 * Pachube account
 
 Software requirements:
-* Python
-* Twisted
-* Arduino plus BlinkM libaries
+* Arduino plus OneWire library
 
 Current status and functionality:
-* Poll the hardware, push an update to Pachube
-* In parallel, the python code connects to the Arduino, sends the current color
-  as a 3-byte RGB string, and then reads two ADC counts that correspond to temp
-  and humidity readings. Units and calibration are done in the python code, as
-  before.
-* Nifty animated BlinkM startup sequence when you hit reset. ;)
-* TAC file from deldotdr for running as a daemon
+* Poll the hardware and pushes an update to Pachube
+* Converts temp to floating point
+  -reads humidity
+  -corrects humidity for temperature
+  -reads raw light value
+* I'm getting a broken feed; there's a known Ethernet bug in 1.0 so I'm not sure yet where 
+the problem is.
+
+Notes:
+* Generating the payload for Pachube was a bit tricky.
+* I have the Pachube API key in my source code, I have to remove that before I push to github.
 
 To-do:
-* Xbee hardware on order - that'll be fun!
+* Xbee hardware en route, as well as solar-power Arduino in watertight enclosure.
+* Need to calibrate light sensor and correct for temperature
