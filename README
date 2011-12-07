@@ -1,5 +1,5 @@
 Paul Hubbard pfh@phfactor.net
-Nov 24 2011
+Dec 7 2011
 
 This project is an evolution of the 'office-weather' project:
 
@@ -10,9 +10,9 @@ You can see the data at
 https://pachube.com/feeds/22374
 
 This version is a simplification - removing the buildbot hooks,
-and planning on adding an external sensor node via Xbee. Think 'simple
-indoor-outdoor weather station', only over engineered, less reliable and
-more fun to hack.
+and planning on adding an external sensor node via Xbee. 
+
+Think 'simple indoor-outdoor weather station', only over engineered, less reliable and more fun to hack.
 
 Hardware requirements:
 * Arduino
