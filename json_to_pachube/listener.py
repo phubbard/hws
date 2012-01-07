@@ -30,21 +30,33 @@ class THOptions(usage.Options):
         ['baudrate', 'b', 9600, 'Serial baudrate'],
         ['port', 'p', '/dev/tty.usbserial-A6008hB0', 'Serial port to use'],
         ]
-
-
+                                    
 class Echo(LineReceiver):
-    def processData(self, data):
+    def update_pachube(self, temp, rh, lux):
+	url = 'http://api.pachube.com/v2/feeds/22374.csv'
+	api_key = open('api.txt').read()
+	data_str = '0,%f\n1,%f\n2,%d\n' % (temp, rh, lux)
 
+	headers = {'X-PachubeApiKey': api_key}
+	headers['Content-Length'] = str(len(data_str))
+
+	d = client.getPage(url,method='PUT',postdata=data_str,headers=headers)
+	d.addCallback(lambda _: logging.debug('Pachube updated ok'))
+	d.addErrback(lambda _: logging.error('Error posting to pachube'))
+
+    def processData(self, data):
         global lastTemp, lastRH, lastTimestamp, lastLux
 
         lastTemp = data['temp']
         lastRH = data['RH']
         lastLux = data['lux']
-        lastTimestamp = time.time()
         
         # Update screen now and then
-        if (time.time() - lastTimestamp) > 20.0:
-            logging.info('Temp: %f C Relative humidity: %f %% Lux: %f' % (lastTemp, lastRH, lastLux))
+        #if (time.time() - lastTimestamp) > 20.0:
+        logging.info('Sensor: %s Temp: %3.2fC Relative humidity: %3.2f%% Lux: %d' % (data['name'], lastTemp, lastRH, lastLux))
+
+        lastTimestamp = time.time()
+	self.update_pachube(lastTemp, lastRH, lastLux)
 
     def connectionMade(self):
         logging.info('Serial connection made!')
@@ -61,7 +73,7 @@ class Echo(LineReceiver):
         self.processData(data)
 
 if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG, \
+    logging.basicConfig(level=logging.INFO, \
                 format='%(asctime)s %(levelname)s [%(funcName)s] %(message)s')
 
     o = THOptions()
