@@ -122,14 +122,14 @@ void sendData(void)
   float rh = getRH(temp);
   int lux = getLight();
   
-  Serial.print("'{\"name\" : \"indoor-1\",");
-  Serial.print("\"temp\": ");
+  Serial.print("{\"name\":\"indoor-1\", ");
+  Serial.print("\"temp\":");
   Serial.print(temp);
-  Serial.print(", \"RH\": ");
+  Serial.print(", \"RH\":");
   Serial.print(rh);
-  Serial.print(", \"lux\": ");
+  Serial.print(", \"lux\":");
   Serial.print(lux);
-  Serial.println("}'");
+  Serial.println("}");
 }
 
 void loop(void)
