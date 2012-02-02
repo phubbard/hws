@@ -42,13 +42,12 @@ Current status and functionality:
   -reads humidity
   -corrects humidity for temperature
   -reads raw light value
-* I'm getting a broken feed; there's a known Ethernet bug in 1.0 so I'm not sure yet where 
-the problem is.
+* I had reliability problems with Ethernet and Zigbee, so the current code uses a server-side python app and USB.
 
 Notes:
 * Generating the payload for Pachube was a bit tricky.
-* I have the Pachube API key in my source code, I have to remove that before I push to github.
+* Pachube API in separate file, going to move feed ID to config.ini
 
 To-do:
-* Xbee hardware en route, as well as solar-power Arduino in watertight enclosure.
+* Solar-power Arduino in watertight enclosure.
 * Need to calibrate light sensor and correct for temperature

@@ -49,8 +49,8 @@ class Echo(LineReceiver):
         logging.info('Sensor: %s Temp: %3.2fC Relative humidity: %3.2f%% Lux: %d' 
             % (data['name'], lastTemp, lastRH, lastLux))
 
-        lastTimestamp = time.time()
-	    self.update_pachube(lastTemp, lastRH, lastLux)
+	lastTimestamp = time.time()
+	self.update_pachube(lastTemp, lastRH, lastLux)
 
     def connectionMade(self):
         logging.info('Serial connection made!')
