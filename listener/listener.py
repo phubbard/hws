@@ -23,14 +23,26 @@ from simplejson import JSONDecodeError
 class THOptions(usage.Options):
     optParameters = [
         ['baudrate', 'b', 9600, 'Serial baudrate'],
-        ['config', 'c', 'config.ini', 'Configuration file'],
         ['port', 'p', '/dev/tty.usbserial-A6008hB0', 'Serial port to use'],
         ]
                                     
 class Echo(LineReceiver):
+
+    api_key = None
+    feed_num = 0
+        
+    def read_config(self):
+        c = SafeConfigParser()
+        c.read('config.ini')
+        self.api_key = c.get('pachube', 'api_key')
+        self.feed_num = c.get('pachube', 'feed_id')
+
     def update_pachube(self, temp, rh, lux):
-    	url = 'http://api.pachube.com/v2/feeds/22374.csv'
-    	api_key = open('api.txt').read()
+        if not self.api_key:
+            self.read_config()
+
+    	url = 'http://api.pachube.com/v2/feeds/%s.csv' % self.feed_num
+    	api_key = self.api_key
     	data_str = '0,%f\n1,%f\n2,%d\n' % (temp, rh, lux)
 
     	headers = {'X-PachubeApiKey': api_key}
@@ -82,7 +94,6 @@ if __name__ == '__main__':
         baudrate = int(o.opts['baudrate'])
 
     port = o.opts['port']
-    config_file = o.opts['config']
 
     logging.debug('About to open port %s' % port)
     s = SerialPort(Echo(), port, reactor, baudrate=baudrate)
