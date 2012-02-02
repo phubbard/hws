@@ -1,62 +1,56 @@
 #!/usr/bin/env python
 
-# pfh 6/15/09
-# Starting from http://itamarst.org/writings/etech04/twisted_internet-22.html
-# Goal: Listen to arduino, save data in engineering units, to CSV, also present
-# in twisted.web or similar. Socket server?
-#
-# Serial code from http://twistedmatrix.com/projects/core/documentation/examples/gpsfix.py
+"""
+listener.py is an interface program, between an arduino and Pachube. It 
+receives JSON-encoded data from the Arduino and uploads it to Pachube.
+
+Note that your API key and pachube feed ID must be in config.ini for this to work!
+"""
 
 from twisted.protocols.basic import LineReceiver
-
 from twisted.internet import reactor
 from twisted.internet.serialport import SerialPort
 from twisted.web import server, resource, client
-
 from twisted.python import usage
+
+from ConfigParser import SafeConfigParser
 import logging
 import sys
 import time
 import simplejson as json
 from simplejson import JSONDecodeError
 
-lastTemp = 0.0
-lastRH = 0.0
-lastLux = 0
-lastTimestamp = 0
-
 class THOptions(usage.Options):
     optParameters = [
         ['baudrate', 'b', 9600, 'Serial baudrate'],
+        ['config', 'c', 'config.ini', 'Configuration file'],
         ['port', 'p', '/dev/tty.usbserial-A6008hB0', 'Serial port to use'],
         ]
                                     
 class Echo(LineReceiver):
     def update_pachube(self, temp, rh, lux):
-	url = 'http://api.pachube.com/v2/feeds/22374.csv'
-	api_key = open('api.txt').read()
-	data_str = '0,%f\n1,%f\n2,%d\n' % (temp, rh, lux)
+    	url = 'http://api.pachube.com/v2/feeds/22374.csv'
+    	api_key = open('api.txt').read()
+    	data_str = '0,%f\n1,%f\n2,%d\n' % (temp, rh, lux)
 
-	headers = {'X-PachubeApiKey': api_key}
-	headers['Content-Length'] = str(len(data_str))
+    	headers = {'X-PachubeApiKey': api_key}
+    	headers['Content-Length'] = str(len(data_str))
 
-	d = client.getPage(url,method='PUT',postdata=data_str,headers=headers)
-	d.addCallback(lambda _: logging.debug('Pachube updated ok'))
-	d.addErrback(lambda _: logging.error('Error posting to pachube'))
+    	d = client.getPage(url,method='PUT',postdata=data_str,headers=headers)
+    	d.addCallback(lambda _: logging.debug('Pachube updated ok'))
+    	d.addErrback(lambda _: logging.error('Error posting to pachube'))
 
     def processData(self, data):
-        global lastTemp, lastRH, lastTimestamp, lastLux
 
         lastTemp = data['temp']
         lastRH = data['RH']
         lastLux = data['lux']
         
-        # Update screen now and then
-        #if (time.time() - lastTimestamp) > 20.0:
-        logging.info('Sensor: %s Temp: %3.2fC Relative humidity: %3.2f%% Lux: %d' % (data['name'], lastTemp, lastRH, lastLux))
+        logging.info('Sensor: %s Temp: %3.2fC Relative humidity: %3.2f%% Lux: %d' 
+            % (data['name'], lastTemp, lastRH, lastLux))
 
         lastTimestamp = time.time()
-	self.update_pachube(lastTemp, lastRH, lastLux)
+	    self.update_pachube(lastTemp, lastRH, lastLux)
 
     def connectionMade(self):
         logging.info('Serial connection made!')
@@ -88,6 +82,7 @@ if __name__ == '__main__':
         baudrate = int(o.opts['baudrate'])
 
     port = o.opts['port']
+    config_file = o.opts['config']
 
     logging.debug('About to open port %s' % port)
     s = SerialPort(Echo(), port, reactor, baudrate=baudrate)
